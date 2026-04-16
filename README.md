@@ -1,5 +1,8 @@
 # Documentation website
 
-This app renders the documentation site for this repository.
+This app serves the documentation website for Sb0rka.
 
-The source of truth is `https://github.com/sb0rka/sb0rka/tree/main/docs`. The `website/` app is only the rendering layer for that content.
+The source of truth is the `docs/` directory in the repository:
+https://github.com/sb0rka/sb0rka
+
+The app is only responsible for rendering that content.
