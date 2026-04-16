@@ -1,0 +1,5 @@
+/* Дополнительные стили поверх nextra-theme-docs/style.css */
+
+html:not(.dark) .site-logo {
+  filter: brightness(0) saturate(100%);
+}

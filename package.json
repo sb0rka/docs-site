@@ -1,0 +1,29 @@
+{
+  "name": "docs-site",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "sync-content": "node ./scripts/sync-content.mjs",
+    "dev": "next dev --hostname 0.0.0.0 --port 5173",
+    "build": "next build",
+    "start": "npx serve@latest out -p 5173",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "next": "16.2.3",
+    "nextra": "^4.6.1",
+    "nextra-theme-docs": "^4.6.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
