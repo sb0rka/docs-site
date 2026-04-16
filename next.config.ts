@@ -1,8 +1,13 @@
 import type {NextConfig} from 'next';
 import nextra from 'nextra';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const isProd = process.env.NODE_ENV === 'production';
 const pagesRepo = process.env.PAGES_REPO;
+const hasCustomDomain =
+  fs.existsSync(path.join(process.cwd(), 'CNAME')) ||
+  fs.existsSync(path.join(process.cwd(), 'public', 'CNAME'));
 
 const withNextra = nextra({
   contentDirBasePath: '/',
@@ -19,7 +24,7 @@ const nextConfig: NextConfig = {
     locales: ['ru', 'en'],
     defaultLocale: 'en',
   },
-  ...(isProd && pagesRepo
+  ...(isProd && pagesRepo && !hasCustomDomain
     ? {
         basePath: `/${pagesRepo}`,
       }

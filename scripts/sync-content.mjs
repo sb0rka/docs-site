@@ -278,7 +278,9 @@ function collectFiles(dir, rel = '') {
 }
 
 function syncCname() {
-  const srcCname = path.join(srcRoot, 'CNAME');
+  const srcCnameRoot = path.join(websiteRoot, 'CNAME');
+  const srcCnameDocs = path.join(srcRoot, 'CNAME');
+  const srcCname = fs.existsSync(srcCnameRoot) ? srcCnameRoot : srcCnameDocs;
   const dstCname = path.join(publicRoot, 'CNAME');
   if (!fs.existsSync(srcCname)) {
     if (fs.existsSync(dstCname)) fs.rmSync(dstCname, {force: true});
