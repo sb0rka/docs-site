@@ -10,6 +10,10 @@ const ROUTES: string[][] = [
   ['solutions', 'secrets'],
   ['concepts', 'projects'],
   ['concepts', 'resources'],
+  ['cli', 'overview'],
+  // ['cli', 'installation'],
+  // ['cli', 'configuration'],
+  // ['cli', 'commands'],
 ];
 
 export function generateStaticParams() {

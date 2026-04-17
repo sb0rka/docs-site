@@ -20,11 +20,32 @@ const ROOT_META_BY_LOCALE = {
     index: 'Documentation',
     solutions: 'Solutions',
     concepts: 'Concepts',
+    cli: 'CLI',
   },
   ru: {
     index: 'Документация',
     solutions: 'Решения',
     concepts: 'Концепции',
+    cli: 'CLI',
+  },
+};
+
+const SUBDIR_META_BY_LOCALE = {
+  en: {
+    cli: {
+      overview: 'Overview',
+      // installation: 'Installation',
+      // configuration: 'Configuration',
+      // commands: 'Command reference',
+    },
+  },
+  ru: {
+    cli: {
+      overview: 'Обзор',
+      // installation: 'Установка',
+      // configuration: 'Конфигурация',
+      // commands: 'Справочник команд',
+    },
   },
 };
 
@@ -330,6 +351,31 @@ for (const locale of LOCALES) {
   const metaPath = path.join(localeDir, '_meta.ts');
   const body = `export default ${JSON.stringify(meta, null, 2)};\n`;
   fs.writeFileSync(metaPath, body, 'utf8');
+
+  const subdirMetaConfig =
+    SUBDIR_META_BY_LOCALE[locale] ?? SUBDIR_META_BY_LOCALE[SOURCE_DEFAULT_LOCALE] ?? {};
+  for (const [subdir, baseMetaMap] of Object.entries(subdirMetaConfig)) {
+    const subdirPrefix = `${subdir}/`;
+    const subdirEntries = new Set(
+      files
+        .filter((f) => f.locale === locale && f.dst.startsWith(subdirPrefix))
+        .map((f) => f.dst.slice(subdirPrefix.length))
+        // _meta inside content/{locale}/{subdir} can only reference direct child pages.
+        .filter((relPath) => !relPath.includes('/'))
+        .map((relPath) => path.posix.basename(relPath, path.posix.extname(relPath))),
+    );
+
+    const subMeta = Object.fromEntries(
+      Object.entries(baseMetaMap).filter(([key]) => subdirEntries.has(key)),
+    );
+    if (Object.keys(subMeta).length === 0) continue;
+
+    const subdirPath = path.join(localeDir, subdir);
+    fs.mkdirSync(subdirPath, {recursive: true});
+    const subMetaPath = path.join(subdirPath, '_meta.ts');
+    const subBody = `export default ${JSON.stringify(subMeta, null, 2)};\n`;
+    fs.writeFileSync(subMetaPath, subBody, 'utf8');
+  }
 }
 
 const byLocale = {};
