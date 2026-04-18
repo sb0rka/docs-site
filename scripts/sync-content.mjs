@@ -60,14 +60,19 @@ function shouldSkip(relPosix) {
   if (base === 'AGENTS.md' || base === 'AGENTS.mdx') return true;
   if (base === 'CNAME') return true;
   if (relPosix.startsWith('i18n/')) return true;
-  // Repo-only readme at docs root — not a documentation page (would map to ru via default locale).
-  if (
-    !relPosix.includes('/') &&
-    /^README(?:_[a-z]{2})?\.mdx?$/i.test(base)
-  ) {
-    return true;
-  }
+  // Contributor readme — never a docs page (default-locale README.md maps to ru).
+  if (/^README(?:_[a-z]{2})?\.mdx?$/i.test(base)) return true;
   return false;
+}
+
+function assertCliOverviewNotReadme(dstRelPosix, transformed) {
+  if (!/\/cli\/overview\.mdx$/i.test(dstRelPosix)) return;
+  const body = transformed.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n\s*/m, '').trimStart();
+  if (/^#\s*DO NOT EDIT\b/im.test(body)) {
+    throw new Error(
+      `sync-content: ${dstRelPosix} would ship docs/README text; fix source docs/cli/overview.md`,
+    );
+  }
 }
 
 /**
@@ -337,6 +342,7 @@ for (const {src, locale, dst} of files) {
   fs.mkdirSync(path.dirname(to), {recursive: true});
   const source = fs.readFileSync(from, 'utf8');
   const transformed = transformContent(source, src);
+  assertCliOverviewNotReadme(path.posix.join(locale, dst), transformed);
   fs.writeFileSync(to, transformed, 'utf8');
 }
 const hasCname = syncCname();
