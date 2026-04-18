@@ -157,7 +157,10 @@ function convertStepItems(inner) {
     .filter(Boolean);
 
   const steps = lines.map((line) => {
-    const match = line.match(/^(?:\d+\.\s+|[-*+]\s+)?(.+?)\s+-\s+(.+)$/);
+    // Title/body: ASCII hyphen or en/em dash (RU copy often uses —).
+    const match = line.match(
+      /^(?:\d+\.\s+|[-*+]\s+)?(.+?)\s+[-\u2013\u2014]\s+(.+)$/,
+    );
     if (!match) return line;
     const [, title, description] = match;
     return `<Step title=${JSON.stringify(title)}>
