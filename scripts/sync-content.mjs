@@ -60,6 +60,13 @@ function shouldSkip(relPosix) {
   if (base === 'AGENTS.md' || base === 'AGENTS.mdx') return true;
   if (base === 'CNAME') return true;
   if (relPosix.startsWith('i18n/')) return true;
+  // Repo-only readme at docs root — not a documentation page (would map to ru via default locale).
+  if (
+    !relPosix.includes('/') &&
+    /^README(?:_[a-z]{2})?\.mdx?$/i.test(base)
+  ) {
+    return true;
+  }
   return false;
 }
 
