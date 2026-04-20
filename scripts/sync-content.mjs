@@ -21,12 +21,14 @@ const ROOT_META_BY_LOCALE = {
     solutions: 'Solutions',
     concepts: 'Concepts',
     cli: 'CLI',
+    console: 'Console',
   },
   ru: {
     index: 'Документация',
     solutions: 'Решения',
     concepts: 'Концепции',
     cli: 'CLI',
+    console: 'Консоль',
   },
 };
 
@@ -38,6 +40,9 @@ const SUBDIR_META_BY_LOCALE = {
       // configuration: 'Configuration',
       // commands: 'Command reference',
     },
+    console: {
+      quickstart: 'Quickstart',
+    },
   },
   ru: {
     cli: {
@@ -45,6 +50,9 @@ const SUBDIR_META_BY_LOCALE = {
       // installation: 'Установка',
       // configuration: 'Конфигурация',
       // commands: 'Справочник команд',
+    },
+    console: {
+      quickstart: 'Быстрый старт',
     },
   },
 };
@@ -142,7 +150,8 @@ function convertCardGroupItems(inner) {
 
   const cards = lines.map((line) => {
     const match = line.match(
-      /^(?:[-*+]\s+)?\[([^\]]+)\]\(([^)]+)\)\s+-\s+(.+?)(?:\s+\[([A-Za-z0-9_-]+)\])?$/,
+      // Description separator: ASCII hyphen or en/em dash.
+      /^(?:[-*+]\s+)?\[([^\]]+)\]\(([^)]+)\)\s+[-\u2013\u2014]\s+(.+?)(?:\s+\[([A-Za-z0-9_-]+)\])?$/,
     );
     if (!match) return line;
     const [, title, href, description, icon] = match;
@@ -327,6 +336,48 @@ function syncCname() {
   return true;
 }
 
+function syncDocsImages() {
+  const srcImages = path.join(srcRoot, 'imgs');
+  if (!fs.existsSync(srcImages)) {
+    fs.rmSync(path.join(publicRoot, 'docs', 'imgs'), {recursive: true, force: true});
+    for (const locale of LOCALES) {
+      fs.rmSync(path.join(publicRoot, locale, 'imgs'), {recursive: true, force: true});
+      fs.rmSync(path.join(publicRoot, locale, 'console', 'imgs'), {recursive: true, force: true});
+      fs.rmSync(path.join(dstRoot, locale, 'imgs'), {recursive: true, force: true});
+      fs.rmSync(path.join(dstRoot, locale, 'console', 'imgs'), {recursive: true, force: true});
+    }
+    return false;
+  }
+  const publicDocsImages = path.join(publicRoot, 'docs', 'imgs');
+  fs.mkdirSync(path.dirname(publicDocsImages), {recursive: true});
+  fs.rmSync(publicDocsImages, {recursive: true, force: true});
+  fs.cpSync(srcImages, publicDocsImages, {recursive: true});
+
+  for (const locale of LOCALES) {
+    const publicLocaleImages = path.join(publicRoot, locale, 'imgs');
+    fs.mkdirSync(path.dirname(publicLocaleImages), {recursive: true});
+    fs.rmSync(publicLocaleImages, {recursive: true, force: true});
+    fs.cpSync(srcImages, publicLocaleImages, {recursive: true});
+
+    const contentLocaleImages = path.join(dstRoot, locale, 'imgs');
+    fs.mkdirSync(path.dirname(contentLocaleImages), {recursive: true});
+    fs.rmSync(contentLocaleImages, {recursive: true, force: true});
+    fs.cpSync(srcImages, contentLocaleImages, {recursive: true});
+
+    // Trailing-slash routes under /{locale}/console/* resolve ../imgs to /{locale}/console/imgs.
+    const publicConsoleImages = path.join(publicRoot, locale, 'console', 'imgs');
+    fs.mkdirSync(path.dirname(publicConsoleImages), {recursive: true});
+    fs.rmSync(publicConsoleImages, {recursive: true, force: true});
+    fs.cpSync(srcImages, publicConsoleImages, {recursive: true});
+
+    const contentConsoleImages = path.join(dstRoot, locale, 'console', 'imgs');
+    fs.mkdirSync(path.dirname(contentConsoleImages), {recursive: true});
+    fs.rmSync(contentConsoleImages, {recursive: true, force: true});
+    fs.cpSync(srcImages, contentConsoleImages, {recursive: true});
+  }
+  return true;
+}
+
 if (!fs.existsSync(srcRoot)) {
   console.error(`sync-content: не найден каталог ${srcRoot}`);
   process.exit(1);
@@ -346,6 +397,7 @@ for (const {src, locale, dst} of files) {
   fs.writeFileSync(to, transformed, 'utf8');
 }
 const hasCname = syncCname();
+const hasDocsImages = syncDocsImages();
 
 for (const locale of LOCALES) {
   const localeEntries = new Set(
@@ -403,3 +455,4 @@ const summary = Object.entries(byLocale)
   .join(', ');
 console.log(`sync-content: ${files.length} файл(ов) из docs/ → content/ (${summary})`);
 if (hasCname) console.log('sync-content: CNAME synced to public/CNAME');
+if (hasDocsImages) console.log('sync-content: docs/imgs synced to public/docs/imgs');

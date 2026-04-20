@@ -10,16 +10,39 @@ import {
   GitHubIcon,
   InformationCircleIcon,
   GitHubImportantIcon,
-  GitHubNoteIcon,
 } from 'nextra/icons';
 import type {ComponentType, ReactNode, SVGProps} from 'react';
 
+const DatabaseIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+    <ellipse cx="12" cy="6.5" rx="7" ry="3.5" />
+    <path d="M5 6.5v5c0 1.93 3.13 3.5 7 3.5s7-1.57 7-3.5v-5" />
+    <path d="M5 11.5v5c0 1.93 3.13 3.5 7 3.5s7-1.57 7-3.5v-5" />
+  </svg>
+);
+
+const KeyIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+    <circle cx="7.5" cy="14.5" r="2.5" />
+    <path d="M10 14.5h8" />
+    <path d="M14.2 14.5v-2" />
+    <path d="M16.6 14.5v-1.5" />
+  </svg>
+);
+
+const ConsoleIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+    <path d="M7.5 17.5h8.5a4 4 0 0 0 .9-7.9A5.6 5.6 0 0 0 6.3 8.8a3.8 3.8 0 0 0 1.2 8.7Z" />
+  </svg>
+);
+
 const icons: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
-  lock: GitHubImportantIcon,
+  lock: KeyIcon,
   terminal: TerminalIcon,
-  key: LinkIcon,
-  database: GitHubNoteIcon,
-  rocket: GitHubImportantIcon,
+  key: KeyIcon,
+  database: DatabaseIcon,
+  rocket: ConsoleIcon,
+  console: ConsoleIcon,
   code: FileIcon,
   folder: FolderIcon,
   file: FileIcon,
@@ -46,7 +69,8 @@ type StepProps = {
 };
 
 const Card = ({title, icon, href, children}: CardProps) => {
-  const IconComponent = icon ? icons[icon] : null;
+  const normalizedIcon = icon?.trim().toLowerCase();
+  const IconComponent = normalizedIcon ? icons[normalizedIcon] : null;
   return (
     <Link
       href={href ?? '#'}

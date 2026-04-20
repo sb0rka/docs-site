@@ -21,6 +21,7 @@ const ROUTES: string[][] = [
   // ['cli', 'installation'],
   // ['cli', 'configuration'],
   // ['cli', 'commands'],
+  ['console', 'quickstart'],
 ];
 
 export function generateStaticParams() {
