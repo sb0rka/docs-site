@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "sync-content": "node ./scripts/sync-content.mjs",
-    "dev": "next dev --hostname 0.0.0.0 --port 5173",
     "build": "next build",
     "start": "npx serve@latest out -p 5173",
     "lint": "eslint"

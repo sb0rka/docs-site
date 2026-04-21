@@ -62,6 +62,11 @@ const LOCALE_SUFFIX_RE = new RegExp(
   `_(${LOCALES.join('|')})\\.mdx?$`,
   'i',
 );
+const INTERNAL_LINK_SCHEME_RE = /^(?:[a-z][a-z\d+.-]*:|\/\/)/i;
+const LINK_LOCALE_SUFFIX_RE = new RegExp(
+  `_(${LOCALES.join('|')})(?=(?:/)?$|\\.(?:md|mdx)$)`,
+  'i',
+);
 
 function shouldSkip(relPosix) {
   const base = path.posix.basename(relPosix);
@@ -104,6 +109,38 @@ function normalizeTargetName(filename) {
   return filename.replace(/\.(md|mdx)$/i, '.mdx');
 }
 
+function normalizeLocalizedLinkTarget(target) {
+  if (!target) return target;
+  if (target.startsWith('#')) return target;
+  if (INTERNAL_LINK_SCHEME_RE.test(target)) return target;
+
+  const hashIndex = target.indexOf('#');
+  const queryIndex = target.indexOf('?');
+  const splitIndexCandidates = [hashIndex, queryIndex].filter((idx) => idx >= 0);
+  const splitIndex = splitIndexCandidates.length > 0 ? Math.min(...splitIndexCandidates) : target.length;
+
+  const pathname = target.slice(0, splitIndex);
+  const suffix = target.slice(splitIndex);
+  const normalizedPathname = pathname.replace(LINK_LOCALE_SUFFIX_RE, '');
+  return `${normalizedPathname}${suffix}`;
+}
+
+function normalizeLocalizedLinks(content) {
+  let normalized = content;
+
+  // JSX/HTML href attributes with quoted string literal values.
+  normalized = normalized.replace(
+    /\bhref=(["'])([^"']+)\1/g,
+    (_, quote, target) => `href=${quote}${normalizeLocalizedLinkTarget(target)}${quote}`,
+  );
+  normalized = normalized.replace(
+    /\bhref=\{(["'])([^"']+)\1\}/g,
+    (_, quote, target) => `href={${quote}${normalizeLocalizedLinkTarget(target)}${quote}}`,
+  );
+
+  return normalized;
+}
+
 function parseDirectiveAttributes(raw = '') {
   const attrs = {};
   for (const match of raw.matchAll(/(\w+)=(?:"([^"]*)"|'([^']*)'|([^\s]+))/g)) {
@@ -136,6 +173,9 @@ function convertLeafDirectives(body, directiveName, componentName) {
     new RegExp(`::${directiveName}(?:\\{([^}]*)\\})?\\s*\\n([\\s\\S]*?)\\n::`, 'g'),
     (_, rawAttrs = '', inner) => {
       const attrs = parseDirectiveAttributes(rawAttrs);
+      if (typeof attrs.href === 'string') {
+        attrs.href = normalizeLocalizedLinkTarget(attrs.href);
+      }
       const content = inner.trim();
       return `<${componentName}${renderProps(attrs)}>\n${content}\n</${componentName}>`;
     },
@@ -155,8 +195,9 @@ function convertCardGroupItems(inner) {
     );
     if (!match) return line;
     const [, title, href, description, icon] = match;
+    const normalizedHref = normalizeLocalizedLinkTarget(href);
     const iconProp = icon ? ` icon=${JSON.stringify(icon)}` : '';
-    return `<Card title=${JSON.stringify(title)} href=${JSON.stringify(href)}${iconProp}>
+    return `<Card title=${JSON.stringify(title)} href=${JSON.stringify(normalizedHref)}${iconProp}>
   ${description}
 </Card>`;
   });
@@ -300,6 +341,7 @@ function transformContent(source, filename) {
   content = convertStepsDirective(content);
   content = convertCardGroupJsxBlock(content);
   content = convertStepsJsxBlock(content);
+  content = normalizeLocalizedLinks(content);
   return content;
 }
 
